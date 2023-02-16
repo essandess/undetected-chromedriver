@@ -8,6 +8,7 @@ import os
 import random
 import re
 import string
+import subprocess
 import sys
 import time
 from urllib.request import urlopen
@@ -18,6 +19,8 @@ import zipfile
 logger = logging.getLogger(__name__)
 
 IS_POSIX = sys.platform.startswith(("darwin", "cygwin", "linux", "linux2"))
+
+chromedriver_version_reprog = re.compile(r'ChromeDriver +(\d+)(.\d+)* +.*')
 
 
 class Patcher(object):
@@ -85,6 +88,15 @@ class Patcher(object):
         if executable_path:
             self._custom_exe_path = True
             self.executable_path = executable_path
+            try:
+                version_main = int(
+                    chromedriver_version_reprog.sub('\\1',
+                        subprocess.run([self.executable_path, '--version'],
+                            stdout=subprocess.PIPE).stdout.decode('ascii').strip()
+                    )
+                )
+            except Exception as e:
+                print(e)
         self.version_main = version_main
         self.version_full = None
 
